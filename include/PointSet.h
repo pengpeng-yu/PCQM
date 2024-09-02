@@ -294,7 +294,7 @@ public:
       // read data from file
       file.read(*file_stream);
 
-      std::vector< std::array<float, 3> > verts;
+      std::vector< std::array<double, 3> > verts;
       std::vector< std::array<unsigned char, 3> > cols;
       // init boundaries
       xmin = ymin = zmin = std::numeric_limits<double>::max();
@@ -312,6 +312,17 @@ public:
         
 		verts.resize(vertices->count);
 
+      if (vertices->t == tinyply::Type::FLOAT32) {
+        double* dest = reinterpret_cast<double*>(verts.data());
+        const float* src = reinterpret_cast<const float*>(vertices->buffer.get());
+        for (size_t i = 0; i < point_size * 3; ++i) {
+          dest[i] = static_cast<double>(src[i]);
+        }
+      } else if (vertices->t == tinyply::Type::FLOAT64) {
+         std::memcpy(verts.data(), vertices->buffer.get(), vertices->buffer.size_bytes());
+      } else {
+         throw std::runtime_error("");
+      }
         std::memcpy(verts.data(), vertices->buffer.get(), vertices->buffer.size_bytes());
         for (const auto& i : verts) {
 
